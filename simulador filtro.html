@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador PRO MAX - Filtro de Agua</title>
+
+<style>
+body{
+    font-family: Arial;
+    background: #eef;
+    text-align: center;
+}
+
+.container{
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    margin: auto;
+    box-shadow: 0 0 10px gray;
+}
+
+/* MATERIALES */
+.item{
+    display: inline-block;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.2s;
+}
+
+.item:active{
+    transform: scale(0.9);
+}
+
+#grava{ background: #777; }
+#arena{ background: #c2a56b; }
+#carbon{ background: #222; }
+#algodon{ background: #eee; color: black; }
+
+/* TUBO */
+.tubo{
+    width: 120px;
+    height: 300px;
+    border: 4px solid #555;
+    border-radius: 50px;
+    margin: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    background: #ddd;
+}
+
+/* CAPAS */
+.capa{
+    width: 100%;
+    height: 40px;
+}
+
+/* PARTÍCULAS */
+.particula{
+    width: 6px;
+    height: 6px;
+    background: brown;
+    border-radius: 50%;
+    position: absolute;
+    animation: caer 3s linear infinite;
+}
+
+@keyframes caer{
+    0%{ transform: translateY(0); opacity: 1; }
+    100%{ transform: translateY(300px); opacity: 0; }
+}
+
+/* AGUA */
+.agua{
+    width:60px;
+    height:100px;
+    border-radius:10px;
+    margin:auto;
+}
+
+/* ANIMACIÓN */
+.aguaFluyendo{
+    animation: flujo 2s ease-in-out;
+}
+
+@keyframes flujo{
+    0%{ height:0; opacity:0; }
+    100%{ height:100px; opacity:1; }
+}
+
+button{
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #2196f3;
+    color: white;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>🧪 Simulador PRO MAX: Construye tu filtro</h2>
+
+<p>Toca los materiales para agregarlos al filtro:</p>
+
+<div>
+<div class="item" onclick="agregarMaterial('grava')" id="grava">Grava</div>
+<div class="item" onclick="agregarMaterial('arena')" id="arena">Arena</div>
+<div class="item" onclick="agregarMaterial('carbon')" id="carbon">Carbón</div>
+<div class="item" onclick="agregarMaterial('algodon')" id="algodon">Algodón</div>
+</div>
+
+<h3>Filtro (Tubo)</h3>
+<div class="tubo" id="filtro"></div>
+
+<br>
+<button onclick="reiniciar()">Reiniciar filtro</button>
+
+<p>Contaminación inicial</p>
+<input type="range" min="0" max="100" value="80" id="cont" oninput="generarParticulas()">
+
+<div id="animacion" style="position:relative; height:60px;"></div>
+
+<!-- FLUJO -->
+<h3>Flujo de agua</h3>
+
+<div style="display:flex; align-items:center; justify-content:center; gap:20px;">
+
+    <div>
+        <p>Entrada</p>
+        <div id="aguaEntrada" class="agua" style="background:#5b3a29;"></div>
+    </div>
+
+    <div style="font-size:30px;">➡️</div>
+
+    <div>
+        <p>Salida</p>
+        <div id="aguaSalida" class="agua" style="background:#999;"></div>
+    </div>
+
+</div>
+
+<br>
+<button onclick="evaluar()">Evaluar filtro</button>
+
+<h3 id="res"></h3>
+<p id="exp"></p>
+
+</div>
+
+<script>
+let materiales = [];
+
+/* AGREGAR MATERIAL CON CLICK */
+function agregarMaterial(tipo){
+
+    if(materiales.includes(tipo)){
+        alert("Este material ya fue agregado");
+        return;
+    }
+
+    materiales.push(tipo);
+
+    let capa = document.createElement("div");
+    capa.classList.add("capa");
+
+    if(tipo === "grava") capa.style.background = "#777";
+    if(tipo === "arena") capa.style.background = "#c2a56b";
+    if(tipo === "carbon") capa.style.background = "#222";
+    if(tipo === "algodon") capa.style.background = "#eee";
+
+    document.getElementById("filtro").appendChild(capa);
+}
+
+/* REINICIAR */
+function reiniciar(){
+    materiales = [];
+    document.getElementById("filtro").innerHTML = "";
+    document.getElementById("res").innerHTML = "";
+    document.getElementById("exp").innerHTML = "";
+}
+
+/* PARTÍCULAS */
+function generarParticulas(){
+    let cont = document.getElementById("cont").value;
+    let zona = document.getElementById("animacion");
+
+    zona.innerHTML = "";
+
+    for(let i=0; i<cont/5; i++){
+        let p = document.createElement("div");
+        p.classList.add("particula");
+        p.style.left = Math.random()*100 + "%";
+        p.style.animationDuration = (2 + Math.random()*2) + "s";
+        zona.appendChild(p);
+    }
+}
+
+/* EVALUAR */
+function evaluar(){
+    let score = 0;
+    let cont = parseInt(document.getElementById("cont").value);
+
+    materiales.forEach(m => {
+        if(m === "grava") score += 15;
+        if(m === "arena") score += 25;
+        if(m === "carbon") score += 40;
+        if(m === "algodon") score += 20;
+    });
+
+    let calidad = score - cont * 0.5;
+
+    let estado = "";
+    let exp = "";
+
+    let salida = document.getElementById("aguaSalida");
+    let entrada = document.getElementById("aguaEntrada");
+
+    salida.classList.remove("aguaFluyendo");
+    entrada.classList.remove("aguaFluyendo");
+
+    void salida.offsetWidth;
+    void entrada.offsetWidth;
+
+    salida.classList.add("aguaFluyendo");
+    entrada.classList.add("aguaFluyendo");
+
+    if(calidad > 60){
+        estado = "💧 Agua limpia";
+        exp = "Buen diseño del sistema. Los materiales interactúan correctamente.";
+        salida.style.background = "#4fc3f7";
+    }
+    else if(calidad > 30){
+        estado = "⚠️ Agua regular";
+        exp = "El sistema funciona parcialmente.";
+        salida.style.background = "#a1887f";
+    }
+    else{
+        estado = "🚫 Agua contaminada";
+        exp = "El sistema falla.";
+        salida.style.background = "#5b3a29";
+    }
+
+    document.getElementById("res").innerHTML = estado;
+    document.getElementById("exp").innerHTML = exp;
+}
+</script>
+
+</body>
+</html>
